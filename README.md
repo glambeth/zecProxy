@@ -1,0 +1,2 @@
+# zecProxy
+Zcash Stratum Proxy
