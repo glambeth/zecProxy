@@ -5,7 +5,8 @@ import re
 
 '''
 Current Problems/Thoughts/Things to do:
-	1) Implement a dictionary taking an ID and returning a miner and then send the correct miner the response to mining.submit in handlPoolLine
+	1) Use deferreds..saves a lot of time. 
+	2) global variables (this should be fixed with deferreds though)
 '''
 
 
@@ -14,22 +15,26 @@ miners = []
 miningPool = None
 curJon = None
 Target = None
-
+IdToMiner = {}
 
 class StratumProtocol(protocol.Protocol):
 	def __init__(self, factory):
 		self.factory = factory
-		self.reqID = 4
+		#this is not sent to 5 to avoid collisions with responses to other stratum procedures
+		self.reqID = 5
 
+	#this function also inserts connections to IdToMiner
+	#todo: refactor and fix the side effect in this fuction
 	def incrementID(self, json_data):
 		json_data['id'] = self.reqID
 		lineNew = json.dumps(json_data, sort_keys=True)
-		self.reqID = self.reqID + 1
 		sep = '['
 		rest = sep + lineNew.split(sep, 1)[1]
 		beg = lineNew.split(sep, 1)[0]
 		rest = re.sub(r'\s+', '', rest)
 		newString = beg + rest + '\n'
+		IdToMiner[self.reqID] = self
+		self.reqID = self.reqID + 1
 		return newString
 
 	def handleMinerLine(self, line):
@@ -44,7 +49,13 @@ class StratumProtocol(protocol.Protocol):
 			miningPool.transport.write(line + '\n')
 
 	def handlePoolLine(self, line):
-		for miner in miners:
+		json_data = json.loads(line)
+		reqID = json_data['id']
+		if reqID in IdToMiner:
+			IdToMiner[reqID].transport.write(line)
+			IdToMiner.pop(reqID)
+			return
+ 		for miner in miners:
 			print 'sending data to miner'
 			miner.transport.write(line)
 
