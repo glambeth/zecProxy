@@ -1,5 +1,6 @@
 from twisted.internet.protocol import Factory
 from twisted.internet import reactor, protocol
+from twisted.protocols.basic import LineReceiver
 import json
 import re
 
@@ -9,15 +10,14 @@ Current Problems/Thoughts/Things to do:
 	2) global variables (this should be fixed with deferreds though)
 '''
 
-
-
 miners = []
 miningPool = None
 curJon = None
 Target = None
 IdToMiner = {}
 
-class StratumProtocol(protocol.Protocol):
+class StratumProtocol(LineReceiver):
+	delimiter = "\n"
 	def __init__(self, factory):
 		self.factory = factory
 		#this is not sent to 5 to avoid collisions with responses to other stratum procedures
@@ -32,7 +32,7 @@ class StratumProtocol(protocol.Protocol):
 		rest = sep + lineNew.split(sep, 1)[1]
 		beg = lineNew.split(sep, 1)[0]
 		rest = re.sub(r'\s+', '', rest)
-		newString = beg + rest + '\n'
+		newString = beg + rest 
 		IdToMiner[self.reqID] = self
 		self.reqID = self.reqID + 1
 		return newString
@@ -44,20 +44,20 @@ class StratumProtocol(protocol.Protocol):
 		json_data = json.loads(line)
 		print 'sending data to pool'
 		if json_data['method'] == 'mining.submit':
-			miningPool.transport.write(self.incrementID(json_data))
+			miningPool.sendLine(self.incrementID(json_data))
 		else:
-			miningPool.transport.write(line + '\n')
+			miningPool.sendLine(line)
 
 	def handlePoolLine(self, line):
 		json_data = json.loads(line)
 		reqID = json_data['id']
 		if reqID in IdToMiner:
-			IdToMiner[reqID].transport.write(line)
+			IdToMiner[reqID].sendLine(line)
 			IdToMiner.pop(reqID)
 			return
  		for miner in miners:
 			print 'sending data to miner'
-			miner.transport.write(line)
+			miner.sendLine(line)
 
 	def connectionMade(self):
 		print '=================================================='
@@ -83,29 +83,29 @@ class StratumProtocol(protocol.Protocol):
 			reactor.connectTCP("us1-zcash.flypool.org", 3333, StratumPoolFactory())
 		print '=================================================='
 
-	def dataReceived(self, data):
+	def lineReceived(self, line):
 		print '=================================================='
 		print 'Data Received'
-		print data
+		print line
 		if self.factory.__class__ == StratumMinerFactory:
 			#received data from miner. Send to the pool
 			print ' the data is from the miner'
-			if "\n" in data:
-				for line in data.splitlines():
+			if "\n" in line:
+				for line in line.splitlines():
 					self.handleMinerLine(line)
 			else:
-				self.handleMinerLine(data) 
+				self.handleMinerLine(line) 
 
 		elif self.factory.__class__ == StratumPoolFactory:
 			#received data from pool. Send to miner
 			#currently the data is sent to all of the miners, but instead
 			#it should only be sent 
 			print ' the data is from the pool'
-			if "\n" in data:
-				for line in data.splitlines():
+			if "\n" in line:
+				for line in line.splitlines():
 					self.handlePoolLine(line)
 			else:
-				self.handlePoolLine(data) 
+				self.handlePoolLine(line) 
 		print '=================================================='
 
 class StratumPoolFactory(protocol.ClientFactory):
