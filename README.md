@@ -18,7 +18,6 @@ Originally developed for Flypool http://zcash.flypool.org/
 ```
 
 #Todo
-* implement multiple rig support
 * implement failover 
 * Clean up code
 
