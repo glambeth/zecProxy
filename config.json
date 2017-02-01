@@ -1,0 +1,7 @@
+{
+	"wallet": "t1JCTyzYgqufiATXM2HjfiobPKnNZxpXX5a.proxy",
+	"pool" : {
+		"host" : "us1-zcash.flypool.org",
+		"port" : 3333
+ 	}
+}

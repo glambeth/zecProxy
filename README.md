@@ -1,9 +1,9 @@
 #Description 
 
-This is a Stratum Proxy for Zcash using JSON-RPC written in Python Twisted. 
+This is a Stratum Proxy for Zcash using JSON-RPC written in Javascript. 
 Originally developed for Flypool http://zcash.flypool.org/ 
 
-**WARNING** This is still in active development. Please report any problems you encounter!
+**WARNING** This is still in active development. Please report any problems you encounter, and use with caution! 
 
 #How it Works
 ```
@@ -13,20 +13,26 @@ Originally developed for Flypool http://zcash.flypool.org/
                |                       |
   Pool B <---+-----StratumProxy  <-----+-------------+ Rig3 / PC3
 (FailOver)                             |
-                                       +-------------+ Rig4 / PC4
-                                      
+                                       +-------------+ Rig4 / PC4                                      
 ```
 
 #Todo
 * implement failover 
 * Clean up code
+* Setup Logging
 
 #Requirements
-zecProxy is build with Python 2.7. The requirements for running zecProxy are:
-* Python 2.7+
-* python-twisted
+zecProxy is build with nodeJS. The requirements for running zecProxy are:
+* nodeJS
+* npm
 * linux
 
 #Installation and Start
-* sudo apt-get install python-twisted
-* python ./zecProxy
+* git clone https://github.com/glambeth/zecProxy.git
+* cd zecProxy
+* npm install
+* node proxy.js
+
+See config.json to change settings. 
+The proxy will automatically listen on port 8000 for miners
+

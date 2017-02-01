@@ -1,0 +1,10 @@
+{
+  "name": "zecProxy",
+  "version": "1.0",
+  "description": "Zcash Stratum Proxy",
+  "main": "proxy.js",
+  "scripts": {},
+  "dependencies": {
+    "ldjson-stream": "^1.2.1"
+  }
+}
